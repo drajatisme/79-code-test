@@ -25,7 +25,7 @@ public class CreateCountryServiceHandlerAsync : IServiceHandlerAsync<CreateCount
 
         var codeExist =
             await _context.Countries.AnyAsync(
-                a => request.CountryCode.Equals(a.Code, StringComparison.OrdinalIgnoreCase), cancellationToken);
+                a => a.Code.ToUpper() == request.CountryCode.ToUpper(), cancellationToken);
 
         if (codeExist)
             throw new InvalidOperationException(string.Format(ErrorMessages.DataExist, request.CountryCode));

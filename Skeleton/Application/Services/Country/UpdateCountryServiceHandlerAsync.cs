@@ -24,7 +24,7 @@ public class UpdateCountryServiceHandlerAsync : IServiceHandlerAsync<UpdateCount
 
         var codeExist =
             await _context.Countries.AnyAsync(
-                a => request.CountryCode.Equals(a.Code, StringComparison.OrdinalIgnoreCase), cancellationToken);
+                a => a.Code.ToUpper() == request.CountryCode.ToUpper(), cancellationToken);
 
         var data = await _context.Countries
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken) ?? throw new NullReferenceException("Country");
