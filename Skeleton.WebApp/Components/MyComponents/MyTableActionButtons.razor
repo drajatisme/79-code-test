@@ -1,0 +1,35 @@
+@using Skeleton.WebApp.Common
+<MudButtonGroup Size="MyStyle.GroupButtonSize" OverrideStyles="MyStyle.GroupButtonOverrideStyles">
+    @if (ShowUpdateButton)
+    {
+        <MudIconButton Color="Color.Warning" Icon="@Icons.Material.Outlined.Edit"
+                       Variant="MyStyle.GroupButtonVariant"
+                       OnClick="async (ev) => await OnClickUpdateHandler(ev)"/>
+    }
+    @if (ShowDeleteButton)
+    {
+        <MudIconButton Color="Color.Error" Icon="@Icons.Material.Outlined.Delete"
+                       Variant="MyStyle.GroupButtonVariant"
+                       OnClick="async (ev) => await OnClickDeleteHandler(ev)"/>
+    }
+
+</MudButtonGroup>
+
+@code {
+    [Parameter] public EventCallback<MouseEventArgs> OnUpdateClick { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnDeleteClick { get; set; }
+
+    private bool ShowUpdateButton => OnUpdateClick.HasDelegate;
+    private bool ShowDeleteButton => OnDeleteClick.HasDelegate;
+
+    private async Task OnClickUpdateHandler(MouseEventArgs ev)
+    {
+        await OnUpdateClick.InvokeAsync(ev);
+    }
+
+    private async Task OnClickDeleteHandler(MouseEventArgs ev)
+    {
+        await OnDeleteClick.InvokeAsync(ev);
+    }
+
+}

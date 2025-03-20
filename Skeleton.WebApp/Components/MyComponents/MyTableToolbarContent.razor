@@ -1,0 +1,25 @@
+@using Skeleton.WebApp.Common
+<MudButtonGroup Size="MyStyle.GroupButtonSize" OverrideStyles="MyStyle.GroupButtonOverrideStyles">
+    @if (ShowCreateButton)
+    {
+        <MudIconButton OnClick="async (ev) => await OnClickCreateHandler(ev)" Variant="MyStyle.GroupButtonVariant"
+                       Color="Color.Primary"
+                       Icon="@Icons.Material.Outlined.Add"/>
+    }
+    <MudSpacer/>
+    <MudIconButton Variant="MyStyle.GroupButtonVariant"
+                   Color="Color.Primary"
+                   Icon="@Icons.Material.Outlined.Info"/>
+</MudButtonGroup>
+
+@code {
+    [Parameter] public EventCallback<MouseEventArgs> OnCreateClick { get; set; }
+
+    private bool ShowCreateButton => OnCreateClick.HasDelegate;
+
+    private async Task OnClickCreateHandler(MouseEventArgs ev)
+    {
+        await OnCreateClick.InvokeAsync(ev);
+    }
+
+}

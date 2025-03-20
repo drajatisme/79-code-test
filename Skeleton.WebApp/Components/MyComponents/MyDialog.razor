@@ -1,0 +1,72 @@
+@using Skeleton.WebApp.Common
+@inherits Skeleton.WebApp.Common.MyComponentBase
+
+<MudDialog TitleClass="mud-theme-primary" Style="min-width: 20vw;">
+    <TitleContent>
+        <h2>@MudDialog.Title</h2>
+    </TitleContent>
+    <DialogContent>
+        @ChildContent
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="MyStyle.ButtonVariant" OnClick="Cancel">Cancel</MudButton>
+
+        @if (ShowSaveButton)
+        {
+            <MudButton Color="Color.Primary" Variant="MyStyle.ButtonVariant"
+                       OnClick="@(async (ev) => await OnSaveClickHandler(ev))">
+                Save
+            </MudButton>
+        }
+
+        @if (ShowUpdateButton)
+        {
+            <MudButton Color="Color.Warning" Variant="MyStyle.ButtonVariant"
+                       OnClick="@(async (ev) => await OnUpdateClickHandler(ev))">
+                Update
+            </MudButton>
+        }
+
+        @if (ShowDeleteButton)
+        {
+            <MudButton Color="Color.Error" Variant="MyStyle.ButtonVariant"
+                       OnClick="@(async (ev) => await OnDeleteClickHandler(ev))">
+                Delete
+            </MudButton>
+        }
+
+    </DialogActions>
+</MudDialog>
+
+@code{
+    [Parameter] public required IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public required RenderFragment ChildContent { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnSaveClick { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnUpdateClick { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnDeleteClick { get; set; }
+
+    private bool ShowSaveButton => OnSaveClick.HasDelegate;
+    private bool ShowUpdateButton => OnUpdateClick.HasDelegate;
+    private bool ShowDeleteButton => OnDeleteClick.HasDelegate;
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task OnSaveClickHandler(MouseEventArgs ev)
+    {
+        await OnSaveClick.InvokeAsync(ev);
+    }
+
+    private async Task OnUpdateClickHandler(MouseEventArgs ev)
+    {
+        await OnUpdateClick.InvokeAsync(ev);
+    }
+
+    private async Task OnDeleteClickHandler(MouseEventArgs ev)
+    {
+        await OnDeleteClick.InvokeAsync(ev);
+    }
+
+}

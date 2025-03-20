@@ -1,0 +1,16 @@
+<MudForm Model="Model" @ref="MudFormRef" Validation="Validation">
+    <MudStack Spacing="4">
+        @ChildContent
+    </MudStack>
+</MudForm>
+
+@code {
+    private MudForm? MudFormRef;
+
+    [Parameter, EditorRequired] public object? Model { get; set; }
+    [Parameter] public MudForm? FormRef { get; set; }
+    [Parameter] public object? Validation { get; set; }
+    [Parameter, EditorRequired] public RenderFragment? ChildContent { get; set; }
+    
+    public MudForm? GetForm() => MudFormRef; 
+}

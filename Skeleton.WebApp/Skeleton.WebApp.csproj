@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>aspnet-Skeleton.WebApp-e86d7f9d-7898-4cc5-80f9-50a7864ce5fc</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.*"/>
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.*"/>
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.2" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.*"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.*"/>
+        <PackageReference Include="MudBlazor" Version="8.*"/>
+        <PackageReference Include="Extensions.MudBlazor.StaticInput" Version="3.*"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Skeleton\Skeleton.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Components\Pages\UserNotification\CreateDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\UserNotification\DeleteDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\UserNotification\Index.razor" />
+      <AdditionalFiles Include="Components\Pages\UserNotification\UpdateDialog.razor" />
+    </ItemGroup>
+
+</Project>

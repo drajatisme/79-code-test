@@ -1,0 +1,98 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client
+
+@inherits Skeleton.WebApp.Common.MyComponentBase
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudBadge Color="Color.Secondary" Overlap="true" Dot="true" Visible="_showBadge">
+    <MudIconButton Icon="@Icons.Material.Filled.Email" Color="Color.Inherit" OnClick="HideBadge"/>
+</MudBadge>
+
+@code {
+    [Inject] public ISnackbar? Snackbar { get; set; }
+    
+    private bool _showBadge;
+    private HubConnection? _hubConnection;
+    private AuthenticationState? _authState;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+
+        await InitializeSignalRConnection();
+    }
+
+    private async Task InitializeSignalRConnection()
+    {
+        if (_authState?.User.Identity?.IsAuthenticated == true)
+        {
+            try
+            {
+                _hubConnection = new HubConnectionBuilder()
+                    .WithUrl("http://localhost:5122/notification-hub")
+                    .WithAutomaticReconnect()
+                    .Build();
+
+                _hubConnection.On<string>("NotificationReceived", OnNotificationReceived);
+
+                await _hubConnection.StartAsync();
+                Console.WriteLine("SignalR connection started.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error starting SignalR connection: {ex.Message}");
+            }
+        }
+        else
+        {
+            await DisconnectSignalR();
+        }
+    }
+
+    private void OnNotificationReceived(string? message)
+    {
+        Console.WriteLine($"NotificationReceived: {message}");
+        _showBadge = true;
+        InvokeAsync(StateHasChanged);
+        Snackbar?.Add("You have new notification(s).", Severity.Info);
+    }
+
+    private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        _authState = await task;
+        await InitializeSignalRConnection();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task DisconnectSignalR()
+    {
+        if (_hubConnection != null)
+        {
+            try
+            {
+                await _hubConnection.StopAsync();
+                await _hubConnection.DisposeAsync();
+                _hubConnection = null;
+                Console.WriteLine("SignalR connection stopped.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error stopping SignalR connection: {ex.Message}");
+            }
+        }
+    }
+
+    private void HideBadge()
+    {
+        _showBadge = false;
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+        await DisconnectSignalR();
+        await base.DisposeAsync();
+    }
+
+}

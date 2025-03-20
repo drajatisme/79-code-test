@@ -1,0 +1,107 @@
+@page "/items"
+@using Skeleton.Application.Services
+@using Skeleton.Application.Services.Item
+@inherits Skeleton.WebApp.Common.MyComponentBase
+
+<h3>Items</h3>
+
+<MudDataGrid @ref="_dataGrid" T="ItemDto" ServerData="ServerReload">
+    <ToolBarContent>
+        <MyTableToolbarContent OnCreateClick="async ()=> await OpenCreateDialogAsync()"/>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="x => x.Name" StickyLeft="true"/>
+        <PropertyColumn Property="x => x.Description"/>
+        <PropertyColumn Property="x => x.ItemCategoryName"/>
+        <TemplateColumn Title="Action" StickyRight="true">
+            <CellTemplate>
+                <MyTableActionButtons
+                    OnUpdateClick="async () => await OpenUpdateDialogAsync(context.Item.Id)"
+                    OnDeleteClick="async () => await OpenDeleteDialogAsync(context.Item.Id)"
+                />
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="ItemDto"/>
+    </PagerContent>
+    <LoadingContent>
+        <MyTableLoadingContent/>
+    </LoadingContent>
+    <NoRecordsContent>
+        <MyTableNoRecordContent/>
+    </NoRecordsContent>
+</MudDataGrid>
+
+@code {
+    [Inject] IDialogService? DialogService { get; set; }
+    [Inject] IListServiceHandler<ListItemRequest, ItemDto>? ServiceHandler { get; set; }
+    [Inject] IServiceHandler<DeleteItemRequest>? DeleteServiceHandler { get; set; }
+    [Inject] ILogger<Index>? Logger { get; set; }
+
+    MudDataGrid<ItemDto>? _dataGrid;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        FirstRender = firstRender;
+
+        if (!firstRender) return;
+        Logger?.LogInformation("ItemCategories");
+    }
+
+    private async Task<GridData<ItemDto>> ServerReload(GridState<ItemDto> state)
+    {
+        var response = ServiceHandler?.Handle(new ListItemRequest());
+
+        return new GridData<ItemDto>
+        {
+            TotalItems = response?.Pagination?.TotalData ?? 0,
+            Items = response?.Data ?? []
+        };
+    }
+
+    private async Task OpenCreateDialogAsync()
+    {
+        var dialog = await DialogService?.ShowAsync<CreateDialog>("Create Item")!;
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            _dataGrid?.ReloadServerData();
+        }
+    }
+
+    private async Task OpenUpdateDialogAsync(int id)
+    {
+        var parameter = new DialogParameters<UpdateDialog>
+        {
+            { a => a.Id, id }
+        };
+
+        var dialog = await DialogService?.ShowAsync<UpdateDialog>("Update Item", parameter)!;
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            _dataGrid?.ReloadServerData();
+        }
+    }
+
+    private async Task OpenDeleteDialogAsync(int id)
+    {
+        var parameter = new DialogParameters<UpdateDialog>
+        {
+            { a => a.Id, id }
+        };
+
+        var dialog = await DialogService?.ShowAsync<DeleteDialog>("Delete Item", parameter)!;
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            _dataGrid?.ReloadServerData();
+        }
+    }
+
+}

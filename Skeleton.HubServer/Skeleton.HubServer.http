@@ -1,0 +1,6 @@
+@Skeleton.HubServer_HostAddress = http://localhost:5122
+
+GET {{Skeleton.HubServer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

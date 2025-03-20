@@ -1,0 +1,30 @@
+@using System.Linq.Expressions
+@using Skeleton.Application.Services
+@using Skeleton.Application.Services.Lov
+<MyAutoComplete T="LovDto<int>"
+                Label="Item Category"
+                Value="Value"
+                ValueChanged="ValueChanged"
+                SearchFunc="Search"
+                For="@For"
+                ToStringFunc="@(e => e?.Text)"/>
+
+@code {
+    [Parameter] public LovDto<int>? Value { get; set; }
+    [Parameter] public EventCallback<LovDto<int>> ValueChanged { get; set; }
+    [Parameter] public  Expression<Func<LovDto<int>>>? For { get; set; }
+
+    [Inject] IListServiceHandler<GetItemCategoryLovRequest, LovDto<int>>? LovServiceHandler { get; set; }
+
+    private async Task<IEnumerable<LovDto<int>>> Search(string value, CancellationToken token)
+    {
+        var request = new GetItemCategoryLovRequest
+        {
+            SearchKeyword = value
+        };
+
+        var response = LovServiceHandler?.Handle(request);
+
+        return response?.Data ?? [];
+    }
+}
