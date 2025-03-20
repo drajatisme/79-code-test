@@ -1,0 +1,63 @@
+﻿@using Skeleton.Application.Services
+@using Skeleton.Application.Services.Item
+@using Skeleton.Application.Services.Lov
+@using Skeleton.WebApp.Common
+@using Skeleton.WebApp.Extensions
+@inherits Skeleton.WebApp.Common.MyComponentBase
+
+@inject ISnackbar Snackbar
+@inject IServiceHandler<GetItemRequest, ItemDto> GetItemService
+@inject IServiceHandler<DeleteItemRequest> DeleteItemService
+
+<MyDialog MudDialog="MudDialog" OnDeleteClick="Submit">
+    @if (_requestModel == null)
+    {
+        <NotFoundComponent Key="Item"/>
+    }
+    else
+    {
+        <MyForm Model="_requestModel">
+            <MudField Label="Name" Variant="MyStyle.FieldVariant">@_requestModel.Name</MudField>
+            <MudField Label="Description" Variant="MyStyle.FieldVariant">@_requestModel.Description</MudField>
+            <MudField Label="Category" Variant="MyStyle.FieldVariant">@_requestModel.Category?.Text</MudField>
+        </MyForm>
+    }
+</MyDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
+    [Parameter] public int Id { get; set; }
+
+    private DeleteItemRequest? _requestModel;
+
+    protected override Task OnInitializedAsync()
+    {
+        var response = GetItemService.Handle(new GetItemRequest { Id = Id });
+
+        _requestModel = new DeleteItemRequest
+        {
+            Id = response.Data!.Id,
+            Name = response.Data.Name,
+            Description = response.Data.Description,
+            Category = new LovDto<int>
+            {
+                Text = response.Data.ItemCategoryName
+            }
+        };
+
+        return base.OnInitializedAsync();
+    }
+
+    private void Submit()
+    {
+        var response = DeleteItemService.Handle(_requestModel!);
+        if (!response.Succeeded)
+        {
+            Snackbar?.AddFailed(response.Message);
+            return;
+        }
+
+        Snackbar?.AddDeleted(response.Message);
+        MudDialog?.Close(DialogResult.Ok(response.Succeeded));
+    }
+}

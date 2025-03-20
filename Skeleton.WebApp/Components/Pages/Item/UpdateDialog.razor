@@ -1,0 +1,83 @@
+﻿@using Skeleton.Application.Services
+@using Skeleton.Application.Services.Item
+@using Skeleton.Application.Services.Lov
+@using Skeleton.WebApp.Common
+@using Skeleton.WebApp.Extensions
+@inherits Skeleton.WebApp.Common.MyComponentBase
+
+<MyDialog MudDialog="MudDialog" OnUpdateClick="@(async () => await SubmitAsync())">
+    @if (_requestModel == null)
+    {
+        <NotFoundComponent Key="Item"/>
+    }
+    else
+    {
+        <MyForm Model="_requestModel" Validation="_validator.ValidateValue" @ref="_form">
+
+            <MudTextField Label="Name" Variant="MyStyle.TextFieldVariant" @bind-Value="_requestModel.Name"
+                          For="@(() => _requestModel.Name)"/>
+
+            <MudTextField Label="Description" Variant="MyStyle.TextFieldVariant"
+                          @bind-Value="_requestModel.Description"
+                          For="@(() => _requestModel.Description)"/>
+
+            <MyItemCategoryAutoComplete @bind-Value="_requestModel.Category"
+                                        For="() => _requestModel.Category!"/>
+        </MyForm>
+    }
+</MyDialog>
+
+@code {
+    [Inject] ISnackbar? Snackbar { get; set; }
+    [Inject] IServiceHandler<GetItemRequest, ItemDto>? GetItemService { get; set; }
+    [Inject] IServiceHandler<UpdateItemRequest>? UpdateItemService { get; set; }
+
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
+    [Parameter] public int Id { get; set; }
+
+    private UpdateItemRequest? _requestModel;
+    private readonly UpdateItemRequestValidator _validator = new();
+    private MyForm? _form;
+
+    protected override Task OnInitializedAsync()
+    {
+        var response = GetItemService?.Handle(new GetItemRequest { Id = Id });
+
+        _requestModel = new UpdateItemRequest
+        {
+            Id = response!.Data!.Id,
+            Name = response.Data.Name,
+            Description = response.Data.Description,
+            Category = new LovDto<int>
+            {
+                Value = response.Data.ItemCategoryId,
+                Text = response.Data.ItemCategoryName
+            }
+        };
+        
+        return base.OnInitializedAsync();
+    }
+
+    private async Task SubmitAsync()
+    {
+        var formInstance = _form?.GetForm();
+        if (formInstance == null)
+            return;
+
+        await formInstance.Validate();
+
+        if (formInstance.IsValid)
+        {
+            var response = UpdateItemService?.Handle(_requestModel!) ?? null;
+            if (!response!.Succeeded)
+            {
+                Snackbar?.AddFailed(response.Message);
+                return;
+            }
+
+            Snackbar?.AddUpdated(response.Message);
+            MudDialog?.Close(DialogResult.Ok(response.Succeeded));
+        }
+    }
+
+}

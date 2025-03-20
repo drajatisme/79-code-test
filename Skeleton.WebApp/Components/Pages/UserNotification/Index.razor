@@ -1,0 +1,41 @@
+@page "/user-notifications"
+@using Skeleton.Application.Services
+@using Skeleton.Application.Services.UserNotification
+@inherits Skeleton.WebApp.Common.MyComponentBase
+
+@inject IDialogService DialogService
+
+<h3>Item Categories</h3>
+
+<MudDataGrid @ref="_dataGrid" T="UserNotificationDto" ServerData="ServerReload">
+    <Columns>
+        <PropertyColumn Property="x => x.Subject" StickyLeft="true"/>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="UserNotificationDto"/>
+    </PagerContent>
+    <LoadingContent>
+        <MyTableLoadingContent/>
+    </LoadingContent>
+    <NoRecordsContent>
+        <MyTableNoRecordContent/>
+    </NoRecordsContent>
+</MudDataGrid>
+
+@code {
+    [Inject] IListServiceHandler<ListUserNotificationRequest, UserNotificationDto>? ServiceHandler { get; set; }
+    [Inject] ILogger<Index>? Logger { get; set; }
+
+    MudDataGrid<UserNotificationDto>? _dataGrid;
+
+    private async Task<GridData<UserNotificationDto>> ServerReload(GridState<UserNotificationDto> state)
+    {
+        var response = ServiceHandler?.Handle(new ListUserNotificationRequest());
+
+        return new GridData<UserNotificationDto>
+        {
+            TotalItems = response?.Pagination?.TotalData ?? 0,
+            Items = response?.Data ?? []
+        };
+    }
+}

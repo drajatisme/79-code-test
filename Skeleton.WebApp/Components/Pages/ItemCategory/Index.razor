@@ -1,0 +1,107 @@
+@page "/item-categories"
+@using Skeleton.Application.Services
+@using Skeleton.Application.Services.ItemCategory
+@inherits Skeleton.WebApp.Common.MyComponentBase
+
+@inject IDialogService DialogService
+
+<h3>Item Categories</h3>
+
+<MudDataGrid @ref="_dataGrid" T="ItemCategoryDto" ServerData="ServerReload">
+    <ToolBarContent>
+        <MyTableToolbarContent OnCreateClick="async ()=> await OpenCreateDialogAsync()"/>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="x => x.Name" StickyLeft="true"/>
+        <PropertyColumn Property="x => x.Description"/>
+        <TemplateColumn Title="Action" StickyRight="true">
+            <CellTemplate>
+                <MyTableActionButtons
+                    OnUpdateClick="async () => await OpenUpdateDialogAsync(context.Item.Id)"
+                    OnDeleteClick="async () => await OpenDeleteDialogAsync(context.Item.Id)"
+                />
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="ItemCategoryDto"/>
+    </PagerContent>
+    <LoadingContent>
+        <MyTableLoadingContent/>
+    </LoadingContent>
+    <NoRecordsContent>
+        <MyTableNoRecordContent/>
+    </NoRecordsContent>
+</MudDataGrid>
+
+@code {
+    [Inject] IListServiceHandler<ListItemCategoryRequest, ItemCategoryDto>? ServiceHandler { get; set; }
+    [Inject] IServiceHandler<DeleteItemCategoryRequest>? DeleteServiceHandler { get; set; }
+    [Inject] ILogger<Index>? Logger { get; set; }
+
+    MudDataGrid<ItemCategoryDto>? _dataGrid;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        FirstRender = firstRender;
+
+        if (!firstRender) return;
+        Logger?.LogInformation("ItemCategories");
+    }
+
+    private async Task<GridData<ItemCategoryDto>> ServerReload(GridState<ItemCategoryDto> state)
+    {
+        var response = ServiceHandler?.Handle(new ListItemCategoryRequest());
+
+        return new GridData<ItemCategoryDto>
+        {
+            TotalItems = response?.Pagination?.TotalData ?? 0,
+            Items = response?.Data ?? []
+        };
+    }
+
+    private async Task OpenCreateDialogAsync()
+    {
+        var dialog = await DialogService.ShowAsync<CreateDialog>("Create Item Category");
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            _dataGrid?.ReloadServerData();
+        }
+    }
+
+    private async Task OpenUpdateDialogAsync(int id)
+    {
+        var parameter = new DialogParameters<UpdateDialog>
+        {
+            { a => a.Id, id }
+        };
+
+        var dialog = await DialogService.ShowAsync<UpdateDialog>("Update Item Category", parameter);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            _dataGrid?.ReloadServerData();
+        }
+    }
+
+    private async Task OpenDeleteDialogAsync(int id)
+    {
+        var parameter = new DialogParameters<UpdateDialog>
+        {
+            { a => a.Id, id }
+        };
+
+        var dialog = await DialogService.ShowAsync<DeleteDialog>("Delete Item Category", parameter);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            _dataGrid?.ReloadServerData();
+        }
+    }
+
+}

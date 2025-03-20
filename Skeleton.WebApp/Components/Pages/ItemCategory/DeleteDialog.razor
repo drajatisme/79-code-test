@@ -1,0 +1,58 @@
+﻿@using Skeleton.Application.Services
+@using Skeleton.Application.Services.ItemCategory
+@using Skeleton.WebApp.Common
+@using Skeleton.WebApp.Extensions
+@inherits Skeleton.WebApp.Common.MyComponentBase
+
+@inject ISnackbar Snackbar
+@inject IServiceHandler<GetItemCategoryRequest, ItemCategoryDto> GetItemCategoryService
+@inject IServiceHandler<DeleteItemCategoryRequest> DeleteItemCategoryService
+
+<MyDialog MudDialog="MudDialog" OnDeleteClick="Submit">
+    @if (_requestModel == null)
+    {
+        <NotFoundComponent Key="Category"/>
+    }
+    else
+    {
+        <MyForm Model="_requestModel">
+            <MudField Label="Name" Variant="MyStyle.FieldVariant">@_requestModel.Name</MudField>
+            <MudField Label="Description" Variant="MyStyle.FieldVariant">@_requestModel.Description</MudField>
+        </MyForm>
+    }
+</MyDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
+    [Parameter] public int Id { get; set; }
+
+    private DeleteItemCategoryRequest? _requestModel;
+
+    protected override Task OnInitializedAsync()
+    {
+        var response = GetItemCategoryService?.Handle(new GetItemCategoryRequest { Id = Id });
+
+        _requestModel = new DeleteItemCategoryRequest
+        {
+            Id = response!.Data!.Id,
+            Name = response.Data.Name,
+            Description = response.Data.Description
+        };
+
+        return base.OnInitializedAsync();
+    }
+
+    private void Submit()
+    {
+        var response = DeleteItemCategoryService.Handle(_requestModel!);
+        if (!response.Succeeded)
+        {
+            Snackbar.AddFailed(response.Message);
+            return;
+        }
+
+        Snackbar.AddDeleted(response.Message);
+        MudDialog?.Close(DialogResult.Ok(response.Succeeded));
+    }
+
+}
